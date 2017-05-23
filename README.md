@@ -3,7 +3,7 @@
 
 This is a server to provide relay the notification from Mastodon's Streaming API to registered callback URL.
 
-![diagram](http://i.imgur.com/Jjwsc.jpg "サンプル")
+![slide1](https://cloud.githubusercontent.com/assets/333944/26376504/af071c76-4047-11e7-9308-2cd538be0439.jpg)
 
 
 ## API
