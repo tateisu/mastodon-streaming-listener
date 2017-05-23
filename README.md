@@ -5,6 +5,14 @@ This is a server to provide relay the notification from Mastodon's Streaming API
 
 ![slide1](https://cloud.githubusercontent.com/assets/333944/26376504/af071c76-4047-11e7-9308-2cd538be0439.jpg)
 
+### Different things from Tusky-api.
+- Separate streaming listener server and application server.
+- Streaming listener server does not have application specific information. There is a possibility that it can correspond to multiple applications.
+- Since the application server does not handle WebSocket, it becomes easy to scale.
+- Both the streaming listener server and the application server can be configured behaviors for each instance.
+-- Replace the Streaming API URL to inside the LAN
+-- Support only for a specific instance
+
 
 ## API
 
