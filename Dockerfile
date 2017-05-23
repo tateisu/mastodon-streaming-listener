@@ -2,7 +2,7 @@ FROM node:boron
 
 ENV NODE_ENV=production
 
-RUN adduser --disabled-login -u 1001 -g 1001 --gecos 'App1' app1
+RUN adduser --disabled-login --uid 1001 --gid 1001 --gecos 'App1' app1
 
 RUN mkdir /app1
 WORKDIR /app1
