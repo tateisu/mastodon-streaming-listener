@@ -10,8 +10,8 @@ This is a server to provide relay the notification from Mastodon's Streaming API
 - Streaming listener server does not have application specific information. There is a possibility that it can correspond to multiple applications.
 - Since the application server does not handle WebSocket, it becomes easy to scale.
 - Both the streaming listener server and the application server can be configured behaviors for each instance.
--- Replace the Streaming API URL to inside the LAN
--- Support only for a specific instance
+- Replace the Streaming API URL to inside the LAN
+- Support only for a specific instance
 
 
 ## API
