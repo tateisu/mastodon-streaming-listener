@@ -16,6 +16,6 @@ ADD . /app1
 RUN chown -hR app1:app1 /app1
 USER app1
 
-EXPOSE 3000
+EXPOSE 4002
 VOLUME ["./db:/app1/db"]
 CMD ["npm", "start"]
