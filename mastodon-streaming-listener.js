@@ -5,7 +5,8 @@ import bodyParser from 'body-parser'
 import npmlog from 'npmlog'
 import morgan from 'morgan'
 import Sequelize from 'sequelize'
-import Hjson from 'hjson';
+import Hjson from 'hjson'
+import fs from 'fs'
 
 const app = express()
 const port = process.env.PORT || 4002
