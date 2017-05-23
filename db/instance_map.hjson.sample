@@ -5,9 +5,11 @@
 
     // makes entries for each instance that is allowed to listen.
     // please use only lower-case in instance URL.
-    
+
     "https://mastodon.juggler.jp": {
-        // currently there is no per-instance configuration.
+
+        // (optional) replace url to connect.
+        replaceUrl: "http://172.17.0.1:4000"
     }
 
     // if you want don't limit instance to listen, uncomment this.

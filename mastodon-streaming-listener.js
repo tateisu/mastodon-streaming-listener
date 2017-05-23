@@ -83,6 +83,18 @@ const checkInstanceUrl = (instanceUrl) => {
     return null;
 }
 
+const getReplaceUrl = (instanceUrl) => {
+
+    if (instanceUrl) {
+        var instanceEntry = instanceMap[instanceUrl];
+        if (instanceEntry) {
+            const replaceUrl = instanceEntry.replaceUrl;
+            if( replaceUrl) return replaceUrl;
+        }
+    }
+    return instanceUrl;
+}
+
 const checkAccessToken = (accessToken) => {
     if (!accessToken) {
         return 'missing access_token';
@@ -181,7 +193,8 @@ const connectForUser = (registration) => {
 
         clearInterval(heartbeat)
 
-        const ws = new WebSocket(`${registration.baseUrl}/api/v1/streaming/?access_token=${registration.accessToken}&stream=user`)
+        const url = getReplaceUrl(registration.instanceUrl);
+        const ws = new WebSocket(`${url}/api/v1/streaming/?access_token=${registration.accessToken}&stream=user`)
 
         ws.on('open', () => {
             if (ws.readyState != 1) {
