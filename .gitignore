@@ -4,4 +4,3 @@ db/*.sqlite
 db/*.hjson
 .eslintrc
 .jshintrc
-yarn.lock
