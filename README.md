@@ -3,6 +3,9 @@
 
 This is a server to provide relay the notification from Mastodon's Streaming API to registered callback URL.
 
+![diagram](http://i.imgur.com/Jjwsc.jpg "サンプル")
+
+
 ## API
 
 ### POST /register 
