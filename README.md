@@ -42,6 +42,7 @@ Request body is Content-Type 'application/json' and it has following data.
 
 after git clone , you have to change some file.
 
+```
 # copy sample configuration files
 cp db/app_map.hjson.sample db/app_map.hjson
 cp db/instance_map.hjson.sample db/instance_map.hjson
@@ -58,4 +59,4 @@ chown -R 1001:1001 db
 docker-compose build
 
 docker-compose up
-
+```
