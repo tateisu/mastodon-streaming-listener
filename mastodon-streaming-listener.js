@@ -141,6 +141,7 @@ const connectForUser = (registration) => {
         // send to callback
 
         const message = {
+            instanceUrl: registration.instanceUrl,
             tag: registration.tag,
             appId: registration.appId,
             payload: json.payload

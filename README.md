@@ -33,6 +33,7 @@ If you want to certainly unregister registration, You have to make same these pa
 Callback is called with POST method.
 Request body is Content-Type 'application/json' and it has following data.
 
+- instanceUrl : same of specified in /register.
 - tag : same of specified in /register.
 - appId : same of specified in /register.
 - payload : see document of Mastodon's Streaming API.
