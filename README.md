@@ -64,3 +64,6 @@ docker-compose build
 
 docker-compose up
 ```
+
+default port is 4002. you can configure exposed port in docker-compose.yml.
+You should make web frontend (nginx) to wrap with HTTPS.
