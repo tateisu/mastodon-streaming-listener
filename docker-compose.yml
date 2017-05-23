@@ -1,0 +1,11 @@
+version: '2'
+services:
+  web:
+    restart: always
+    build: .
+    ports:
+    - "172.17.0.1:4002:4002"
+    volumes:
+    - ./db:/app1/db
+    
+    

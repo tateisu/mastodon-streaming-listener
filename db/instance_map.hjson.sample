@@ -1,0 +1,16 @@
+{
+    // Hjson format is extended JSON.
+    // - You can write comment in this file.
+    // - commas are optionnal.
+
+    // makes entries for each instance that is allowed to listen.
+    // please use only lower-case in instance URL.
+    
+    "https://mastodon.juggler.jp": {
+        // currently there is no per-instance configuration.
+    }
+
+    // if you want don't limit instance to listen, uncomment this.
+    // "*" :{
+    // }
+}

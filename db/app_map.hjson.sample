@@ -1,0 +1,12 @@
+{
+    // Hjson format is extended JSON.
+    // - You can write comment in this file.
+    // - commas are optionnal.
+
+    // app id
+    "jp.juggler.subwaytooter": {
+        // app secret that is required to make listener.
+        secret: "PASSWORD"
+    }
+
+}
