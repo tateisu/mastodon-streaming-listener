@@ -58,6 +58,7 @@ Request body is Content-Type 'application/json' and it has following data.
 ### prepare database 
 Please make a database for this app. and memo the parameters that required to connect from app to database.
 
+```
 # type of db. One of mysql, postgres, mssql. (Don't use sqlite)
 DB_DIALECT=postgres
 
@@ -73,6 +74,7 @@ DB_NAME=streaming_listener
 # login information
 DB_USER=streaming_listener
 DB_PASS=***
+```
 
 ### edit configuration files
 
