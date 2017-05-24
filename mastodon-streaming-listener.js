@@ -154,7 +154,7 @@ const connectForUser = (registration) => {
         return false;
     }
 
-    log('info', 'New registration')
+    log('info', 'making WebSocket')
 
     const onMessage = data => {
         const json = JSON.parse(data)
@@ -163,7 +163,7 @@ const connectForUser = (registration) => {
             return
         }
 
-        log('info', `New notification: ${json.event}`)
+        log('info', `notification received: ${json.event}`)
 
         // send to callback
 
