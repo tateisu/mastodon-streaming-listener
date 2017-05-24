@@ -355,7 +355,7 @@ app.post('/register', (req, res) => {
         log('error', error)
     })
 
-    res.sendStatus(201)
+    res.sendStatus(202)
 })
 
 app.post('/unregister', (req, res) => {
@@ -391,7 +391,7 @@ app.post('/unregister', (req, res) => {
         log('error', error)
     })
 
-    res.sendStatus(201)
+    res.sendStatus(202)
 })
 
 app.listen(port, () => {
