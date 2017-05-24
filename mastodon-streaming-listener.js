@@ -7,6 +7,7 @@ import morgan from 'morgan'
 import Sequelize from 'sequelize'
 import Hjson from 'hjson'
 import fs from 'fs'
+import util from 'util'
 
 const app = express()
 const port = process.env.PORT || 4002
@@ -275,6 +276,8 @@ app.post('/register', (req, res) => {
     const now = (new Date()).getTime();
 
     var error;
+    
+    npmlog('info',util.inspect(req.body));
 
     const instanceUrl = req.body.instance_url.toLowerCase();
     error = checkInstanceUrl(instanceUrl)
