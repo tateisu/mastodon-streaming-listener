@@ -90,7 +90,7 @@ const getReplaceUrl = (instanceUrl) => {
         var instanceEntry = instanceMap[instanceUrl];
         if (instanceEntry) {
             const replaceUrl = instanceEntry.replaceUrl;
-            if( replaceUrl) return replaceUrl;
+            if (replaceUrl) return replaceUrl;
         }
     }
     return instanceUrl;
@@ -215,7 +215,7 @@ const connectForUser = (registration) => {
                             return;
                         }
                         const now = (new Date()).getTime();
-                        if( now - r.lastUpdate >= 86400000 * 3){
+                        if (now - r.lastUpdate >= 86400000 * 3) {
                             log('error', 'registration expired.')
                             close();
                             return;
@@ -310,14 +310,16 @@ app.post('/register', (req, res) => {
             appId: appId,
             tag: tag
         }
-    }).then((registration) => {
-        if (registration) {
-            registration.update({
+    }).then((args) => {
+        const model = args[0]
+        // const created = args[1]
+        if (model) {
+            model.update({
                 lastUpdate: now,
                 accessToken: accessToken,
                 callbackUrl: callbackUrl
             }).then((unused) => {
-                connectForUser(registration);
+                connectForUser(model);
             })
         }
     })
