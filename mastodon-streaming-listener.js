@@ -13,6 +13,8 @@ const app = express()
 const port = process.env.PORT || 4002
 const wsStorage = {}
 
+process.on('unhandledRejection', console.dir);
+
 const sequelize = new Sequelize('sqlite://streaming-listener.sqlite', {
     logging: npmlog.verbose,
     storage: 'db/streaming-listener.sqlite'
@@ -38,6 +40,10 @@ const Registration = sequelize.define('registration', {
     },
 
     appId: {
+        type: Sequelize.STRING
+    },
+
+    appSecret: {
         type: Sequelize.STRING
     },
 
@@ -127,7 +133,7 @@ const connectForUser = (registration) => {
         disconnectForUser(registration);
     }
 
-    var error = checkAppId(registration.appId);
+    var error = checkAppId(registration.appId, registration.appSecret);
     if (error) {
         log('error', error);
         close();
@@ -273,12 +279,16 @@ app.get('/', (req, res) => {
 
 app.post('/register', (req, res) => {
 
+    const log = (level, message) => npmlog.log(level, "register", message)
+
     const now = (new Date()).getTime();
 
     var error;
-    
-    npmlog.log('info',util.inspect(req));
-    npmlog.log('info',util.inspect(req.body));
+
+    if (!req.body.instance_url) {
+        log('info', util.inspect(req));
+    }
+
 
     const instanceUrl = req.body.instance_url.toLowerCase();
     error = checkInstanceUrl(instanceUrl)
@@ -321,17 +331,26 @@ app.post('/register', (req, res) => {
             model.update({
                 lastUpdate: now,
                 accessToken: accessToken,
-                callbackUrl: callbackUrl
+                callbackUrl: callbackUrl,
+                appSecret: appSecret
             }).then((unused) => {
                 connectForUser(model);
             })
         }
+    }).catch(error => {
+        log('error', error)
     })
 
     res.sendStatus(201)
 })
 
 app.post('/unregister', (req, res) => {
+
+    const log = (level, message) => npmlog.log(level, "unregister", message)
+
+    if (!req.body.instance_url) {
+        log('info', util.inspect(req));
+    }
 
     const instanceUrl = req.body.instance_url.toLowerCase();
     const tag = req.body.tag
@@ -354,6 +373,8 @@ app.post('/unregister', (req, res) => {
         if (registration) {
             disconnectForUser(registration)
         }
+    }).catch(error => {
+        log('error', error)
     })
 
     res.sendStatus(201)
