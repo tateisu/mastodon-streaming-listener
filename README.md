@@ -105,3 +105,9 @@ docker-compose up
 This app listens on port 4002 at default.
 You can configure exposed port in docker-compose.yml.
 You should use Web frontend (nginx) to wrap with HTTPS.
+
+# Tweak 
+
+### create index
+
+`create unique index stream_listener_registrations_iat on stream_listener_registrations ( "instanceUrl","appId","tag" );`
