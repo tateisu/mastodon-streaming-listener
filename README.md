@@ -82,8 +82,8 @@ after git clone , you have to change some file.
 
 ```
 # copy sample configuration files
-cp db/app_map.hjson.sample db/app_map.hjson
-cp db/instance_map.hjson.sample db/instance_map.hjson
+cp config/app_map.hjson.sample config/app_map.hjson
+cp config/instance_map.hjson.sample config/instance_map.hjson
 
 (edit these .hjson files to configure for client app and instances)
 
