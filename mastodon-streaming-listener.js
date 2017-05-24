@@ -277,6 +277,7 @@ app.post('/register', (req, res) => {
 
     var error;
     
+    npmlog.log('info',util.inspect(req));
     npmlog.log('info',util.inspect(req.body));
 
     const instanceUrl = req.body.instance_url.toLowerCase();
