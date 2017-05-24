@@ -21,9 +21,9 @@ This is a server to provide relay the notification from Mastodon's Streaming API
 ### POST /register 
 
 (parameters)
-- instance_url : URL of Mastodon instance you want to listen. ex) https://mastodon.juggler.jp .
-- tag : any String that can be used for management in your app. this is also used for a part of unique key of registrations.
-- app_id: ID of the your app.
+- instance_url : URL of Mastodon instance you want to listen. ex) https://mastodon.juggler.jp . max length is 255b byte.
+- tag : any String that can be used for management in your app. this is also used for a part of unique key of registrations. max length is 255b byte.
+- app_id: ID of the your app. max length is 255b byte.
 - app_secret : Secret of the your app.
 - access_token : The access token you get from Mastodon's oAuth API.
 - callback_url : The URL that will be called when new notification is arrived.
