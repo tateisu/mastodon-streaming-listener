@@ -55,6 +55,27 @@ Request body is Content-Type 'application/json' and it has following data.
 
 ## installation (using docker-compose)
 
+### prepare database 
+Please make a database for this app. and memo the parameters that required to connect from app to database.
+
+# type of db. One of mysql, postgres, mssql. (Don't use sqlite)
+DB_DIALECT=postgres
+
+# host name or IP addres of database server
+DB_HOST=172.17.0.1
+
+# port number of database server
+DB_PORT=4003
+
+# name of database
+DB_NAME=streaming_listener
+
+# login information
+DB_USER=streaming_listener
+DB_PASS=***
+
+### edit configuration files
+
 after git clone , you have to change some file.
 
 ```
@@ -64,17 +85,21 @@ cp db/instance_map.hjson.sample db/instance_map.hjson
 
 (edit these .hjson files to configure for client app and instances)
 
-# create new database file if not exists
-sqlite db/streaming-listener.sqlite
+cp .env.production.sample .env.production
 
-# make database file that readable from 'app1' user in container
-chown -R 1001:1001 db
+(edit this .env file to configure database connection.)
+```
 
+### build and start 
 
+```
 docker-compose build
 
 docker-compose up
 ```
 
-default port is 4002. you can configure exposed port in docker-compose.yml.
-You should make web frontend (nginx) to wrap with HTTPS.
+### configure nginx
+
+This app listens on port 4002 at default.
+You can configure exposed port in docker-compose.yml.
+You should use Web frontend (nginx) to wrap with HTTPS.

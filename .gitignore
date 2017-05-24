@@ -1,6 +1,5 @@
 npm-debug.log
 node_modules/
-db/*.sqlite
-db/*.hjson
+config/*.hjson
 .eslintrc
 .jshintrc

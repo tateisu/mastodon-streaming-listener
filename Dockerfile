@@ -17,5 +17,5 @@ RUN chown -hR app1:app1 /app1
 USER app1
 
 EXPOSE 4002
-VOLUME ["./db:/app1/db"]
+VOLUME ["./config:/app1/config"]
 CMD ["npm", "start"]

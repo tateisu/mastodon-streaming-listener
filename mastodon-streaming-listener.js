@@ -18,8 +18,7 @@ process.on('unhandledRejection', console.dir);
 const sequelize = new Sequelize(
     process.env.DB_NAME,
     process.env.DB_USER,
-    process.env.DB_PASS,
-    {
+    process.env.DB_PASS, {
         dialect: process.env.DB_DIALECT,
         host: process.env.DB_HOST,
         port: process.env.DB_PORT,
@@ -27,9 +26,9 @@ const sequelize = new Sequelize(
     }
 )
 
-const appMap = Hjson.parse(fs.readFileSync('db/app_map.hjson', 'utf8'));
+const appMap = Hjson.parse(fs.readFileSync('config/app_map.hjson', 'utf8'));
 
-const instanceMap = Hjson.parse(fs.readFileSync('db/instance_map.hjson', 'utf8'));
+const instanceMap = Hjson.parse(fs.readFileSync('config/instance_map.hjson', 'utf8'));
 
 const Registration = sequelize.define('stream_listener_registration', {
 
@@ -134,6 +133,7 @@ const connectForUser = (registration) => {
     }
 
     let heartbeat
+    let last_check = 0
 
     const close = () => {
         clearInterval(heartbeat)
@@ -217,25 +217,32 @@ const connectForUser = (registration) => {
             } else {
                 log('info', 'Connected')
                 heartbeat = setInterval(() => {
-                    Registration.findOne({
-                        where: {
-                            instanceUrl: registration.instanceUrl,
-                            appId: registration.appId,
-                            tag: registration.tag
-                        }
-                    }).then((r) => {
-                        if (!r) {
-                            close();
-                            return;
-                        }
-                        const now = (new Date()).getTime();
-                        if (now - r.lastUpdate >= 86400000 * 3) {
-                            log('error', 'registration expired.')
-                            close();
-                            return;
-                        }
-                        ws.ping()
-                    })
+
+                    ws.ping();
+
+                    const now = (new Date()).getTime();
+
+                    if (now - last_check >= 86400000) {
+                        last_check = now;
+                        Registration.findOne({
+                            where: {
+                                instanceUrl: registration.instanceUrl,
+                                appId: registration.appId,
+                                tag: registration.tag
+                            }
+                        }).then((r) => {
+                            if (!r) {
+                                close();
+                                return;
+                            }
+                            if (now - r.lastUpdate >= 86400000 * 3) {
+                                log('error', 'registration expired.')
+                                close();
+                                return;
+                            }
+                        })
+
+                    }
                 }, 10000)
             }
         })
