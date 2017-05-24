@@ -3,6 +3,7 @@ services:
   web:
     restart: always
     build: .
+    env_file: .env.production
     ports:
     - "172.17.0.1:4002:4002"
     volumes:

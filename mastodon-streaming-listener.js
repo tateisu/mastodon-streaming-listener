@@ -15,16 +15,23 @@ const wsStorage = {}
 
 process.on('unhandledRejection', console.dir);
 
-const sequelize = new Sequelize('sqlite://streaming-listener.sqlite', {
-    logging: npmlog.verbose,
-    storage: 'db/streaming-listener.sqlite'
-})
+const sequelize = new Sequelize(
+    process.env.DB_NAME,
+    process.env.DB_USER,
+    process.env.DB_PASS,
+    {
+        dialect: process.env.DB_DIALECT,
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT,
+        logging: npmlog.verbose
+    }
+)
 
 const appMap = Hjson.parse(fs.readFileSync('db/app_map.hjson', 'utf8'));
 
 const instanceMap = Hjson.parse(fs.readFileSync('db/instance_map.hjson', 'utf8'));
 
-const Registration = sequelize.define('registration', {
+const Registration = sequelize.define('stream_listener_registration', {
 
     lastUpdate: {
         type: Sequelize.BIGINT,
