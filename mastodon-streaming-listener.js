@@ -34,7 +34,7 @@ const loadSetting = () => {
     try {
         appMap = Hjson.parse(fs.readFileSync(file, 'utf8'));
     } catch (e) {
-        npmlog.log('error',file,e)
+        npmlog.log('error', file, e)
         throw e
     }
     //
@@ -42,7 +42,7 @@ const loadSetting = () => {
     try {
         instanceMap = Hjson.parse(fs.readFileSync(file, 'utf8'));
     } catch (e) {
-        npmlog.log('error',file,e)
+        npmlog.log('error', file, e)
         throw e
     }
 }
@@ -50,7 +50,7 @@ const loadSetting = () => {
 try {
     loadSetting();
 } catch (e) {
-    npmlog.log('error','loadSetting',e.stack)
+    npmlog.log('error', 'loadSetting', e.stack)
     process.exit();
 }
 
@@ -59,7 +59,7 @@ process.on('SIGHUP', function () {
     try {
         loadSetting();
     } catch (e) {
-        npmlog.log('error','loadSetting',e.stack)
+        npmlog.log('error', 'loadSetting', e.stack)
     }
 });
 
@@ -99,7 +99,7 @@ const Registration = sequelize.define('stream_listener_registration', {
         {
             name: 'iat',
             unique: true,
-            fields: ['instanceUrl','appId','tag']
+            fields: ['instanceUrl', 'appId', 'tag']
         }
     ]
 
@@ -122,7 +122,7 @@ const checkAppId = (appId, appSecret) => {
     return null;
 }
 
-const checkInstanceUrl = (instanceUrl) => {
+const checkInstanceUrl = (instanceUrl, appId) => {
 
     if (!instanceUrl) {
         return 'missing instance_url';
@@ -134,6 +134,25 @@ const checkInstanceUrl = (instanceUrl) => {
 
         if (!instanceEntry) {
             return 'missing instance configuration for instance: ' + instanceUrl;
+        }
+    }
+
+    const appIdAllowed = instanceEntry.appIdAllowed;
+    if (appIdAllowed) {
+        var bOK = false;
+        if (appId === appIdAllowed) {
+            bOK = true
+        } else if (Array.isArray(appIdAllowed)) {
+            appIdAllowed.forEach((v, i, a) => {
+                if (appId === v) {
+                    bOK = true;
+                }
+            })
+        } else {
+            return 'bad data type of appIdAllowed. it must be string or array of string. in instance: ' + instanceUrl;
+        }
+        if (!bOK) {
+            return "appIdAllowed not contains your app_id :" + appId;
         }
     }
 
@@ -190,7 +209,7 @@ const connectForUser = (registration) => {
         return false;
     }
 
-    error = checkInstanceUrl(registration.instanceUrl)
+    error = checkInstanceUrl(registration.instanceUrl,registration.appId)
     if (error) {
         log('error', error);
         close();
@@ -344,11 +363,19 @@ app.post('/register', (req, res) => {
 
     if (!req.body.instance_url) {
         log('info', util.inspect(req));
+        res.status(400).send("missing instance_url");
+        return;
     }
 
+    const appId = req.body.app_id
+    error = checkAppId(appId, appSecret)
+    if (error) {
+        res.status(400).send(error);
+        return;
+    }
 
     const instanceUrl = req.body.instance_url.toLowerCase();
-    error = checkInstanceUrl(instanceUrl)
+    error = checkInstanceUrl(instanceUrl, appId)
     if (error) {
         res.status(400).send(error);
         return;
@@ -361,14 +388,7 @@ app.post('/register', (req, res) => {
         return;
     }
 
-    const appId = req.body.app_id
     const appSecret = req.body.app_secret
-    error = checkAppId(appId, appSecret)
-    if (error) {
-        res.status(400).send(error);
-        return;
-    }
-
     const callbackUrl = req.body.callback_url
     const tag = req.body.tag
 
@@ -411,7 +431,6 @@ app.post('/unregister', (req, res) => {
 
     const instanceUrl = req.body.instance_url.toLowerCase();
     const tag = req.body.tag
-
     const appId = req.body.app_id
     const appSecret = req.body.app_secret
     var error = checkAppId(appId, appSecret)
