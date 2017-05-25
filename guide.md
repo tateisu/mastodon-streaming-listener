@@ -14,7 +14,7 @@ Subway Tooter では(A)と(B)のサーバを分離することにしました。
 
 ![slide1](https://cloud.githubusercontent.com/assets/333944/26376504/af071c76-4047-11e7-9308-2cd538be0439.jpg)
 
-(A)を処理するサーバアプリを Streaming Listener と読んでいます。図の赤い部分がそれです。
+(A)を処理するサーバを Streaming Listener と読んでいます。図の赤い部分がそれです。
 
 Streaming Listener をアプリサーバから分離する利点
 - (1)(Tuskyと比較して)インスタンスのサーバの近く(LAN内部)でストリーミング受信を行うことで帯域負荷が下がる。安定性も増す。
