@@ -116,7 +116,7 @@ const checkAppId = (appId, appSecret) => {
     }
 
     if (appEntry.secret !== appSecret) {
-        return 'app_secret not match. for app: ' +appId;
+        return 'app_secret not match. app: ' +appId+', secret:'+appSecret;
     }
 
     return null;
@@ -368,6 +368,7 @@ app.post('/register', (req, res) => {
     }
 
     const appId = req.body.app_id
+    const appSecret = req.body.app_secret
     error = checkAppId(appId, appSecret)
     if (error) {
         log('error',error)
@@ -391,7 +392,6 @@ app.post('/register', (req, res) => {
         return;
     }
 
-    const appSecret = req.body.app_secret
     const callbackUrl = req.body.callback_url
     const tag = req.body.tag
 
