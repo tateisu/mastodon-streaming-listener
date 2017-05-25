@@ -35,7 +35,11 @@ Streaming Listener をアプリサーバから分離する利点
 
 https://github.com/tateisu/mastodon-streaming-listener 
 
-を設定/インストールし終わったら以下の情報を(DMで)教えてください。
+の下の方にあるインストール手順をご覧ください。
+
+## アプリサーバとの連携
+
+以下の情報を(DMで)教えてください。
 - 中継できる instance のURL 
 - listenerのAPI endpoint url ( register,unregister の二つ)
 - jp.juggler.subwaytooter 用のapp secret (ランダムに生成しちゃってください)
