@@ -26,9 +26,43 @@ const sequelize = new Sequelize(
     }
 )
 
-const appMap = Hjson.parse(fs.readFileSync('config/app_map.hjson', 'utf8'));
+var appMap;
+var instanceMap;
+const loadSetting = () => {
+    //
+    var file = 'config/app_map.hjson';
+    try {
+        appMap = Hjson.parse(fs.readFileSync(file, 'utf8'));
+    } catch (e) {
+        npmlog.log('error',file,e)
+        throw e
+    }
+    //
+    file = 'config/instance_map.hjson';
+    try {
+        instanceMap = Hjson.parse(fs.readFileSync(file, 'utf8'));
+    } catch (e) {
+        npmlog.log('error',file,e)
+        throw e
+    }
+}
 
-const instanceMap = Hjson.parse(fs.readFileSync('config/instance_map.hjson', 'utf8'));
+try {
+    loadSetting();
+} catch (e) {
+    npmlog.log('error','loadSetting',e.stack)
+    process.exit();
+}
+
+process.on('SIGHUP', function () {
+    console.log('SIGHUP received. loading setting..');
+    try {
+        loadSetting();
+    } catch (e) {
+        npmlog.log('error','loadSetting',e.stack)
+    }
+});
+
 
 const Registration = sequelize.define('stream_listener_registration', {
 
@@ -60,6 +94,15 @@ const Registration = sequelize.define('stream_listener_registration', {
     tag: {
         type: Sequelize.STRING
     }
+}, {
+    indexes: [
+        {
+            name: 'iat',
+            unique: true,
+            fields: ['instanceUrl','appId','tag']
+        }
+    ]
+
 })
 
 
