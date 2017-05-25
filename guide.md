@@ -71,3 +71,5 @@ Streamin Listener も アプリサーバも API仕様と実装を公開してい
 
 Streamin Listener には複数アプリに対応できる設定があります。
 Streamin Listener サーバの管理者と協調してアプリIDとSecretの設定を行うと、それらのタンスでのリアルタイム通知を比較的容易に行えるようになります。
+
+ライセンスはフォーク元のTusky-API に合わせてMITです。
