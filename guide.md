@@ -65,11 +65,11 @@ https://gist.github.com/tateisu/21438a22db9a3f6d77f91160d3e94953
 
 # 他アプリの開発者様へ
 
-Streamin Listener も アプリサーバも API仕様と実装を公開しています。
+Streaming Listener も アプリサーバも API仕様と実装を公開しています。
 - https://github.com/tateisu/mastodon-streaming-listener 
 - https://github.com/tateisu/mastodon-fcm-sender
 
-Streamin Listener には複数アプリに対応できる設定があります。
-Streamin Listener サーバの管理者と協調してアプリIDとSecretの設定を行うと、それらのタンスでのリアルタイム通知を比較的容易に行えるようになります。
+Streaming Listener には複数アプリに対応できる設定があります。
+Streaming Listener サーバの管理者と協調してアプリIDとSecretの設定を行うと、それらのタンスでのリアルタイム通知を比較的容易に行えるようになります。
 
 ライセンスはフォーク元のTusky-API に合わせてMITです。
