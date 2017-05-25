@@ -116,7 +116,7 @@ const checkAppId = (appId, appSecret) => {
     }
 
     if (appEntry.secret !== appSecret) {
-        return 'app_secret not match.'
+        return 'app_secret not match. for app: ' +appId;
     }
 
     return null;
