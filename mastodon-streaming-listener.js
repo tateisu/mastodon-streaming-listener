@@ -253,6 +253,11 @@ const connectForUser = (registration) => {
         })
     }
 
+    const onUnexpectedResponse = (req,res) => {
+        log('error', "onUnexpectedResponse. res="+util.inspect(res));
+        return false;
+    }
+
     const onError = error => {
         log('error', `onError. url=${last_stream_url}, error=` + util.inspect(error));
         clearTimeout(reconnect_timer);
@@ -319,6 +324,7 @@ const connectForUser = (registration) => {
         ws.on('message', onMessage)
         ws.on('error', onError)
         ws.on('close', onClose)
+        ws.on('unexpected-response',onUnexpectedResponse)
 
         wsStorage[ws_key] = ws;
     }
