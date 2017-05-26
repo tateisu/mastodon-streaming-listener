@@ -196,6 +196,8 @@ const connectForUser = (registration) => {
 
     let heartbeat
     let last_check = 0
+    let last_stream_url;
+    let reconnect_timer;
 
     const close = () => {
         clearInterval(heartbeat)
@@ -217,6 +219,7 @@ const connectForUser = (registration) => {
     }
 
     log('info', 'making WebSocket')
+    
 
     const onMessage = data => {
         const json = JSON.parse(data)
@@ -251,27 +254,31 @@ const connectForUser = (registration) => {
     }
 
     const onError = error => {
-        log('error', error)
-        setTimeout(() => reconnect(), 5000)
+        log('error', `onError. url=${last_stream_url}, error=${error}`);
+        clearTimeout(reconnect_timer);
+        reconnect_timer = setTimeout(() => reconnect(), 5000)
     }
 
     const onClose = code => {
         if (code === 1000) {
-            log('info', 'Remote server closed connection')
+            log('info', 'onClose : Remote server closed connection')
             close()
             return
         }
 
-        log('error', `Unexpected close: ${code}`)
-        setTimeout(() => reconnect(), 5000)
+        log('error', `onClose: code=${code}, url=${last_stream_url}`)
+        clearTimeout(reconnect_timer);
+        reconnect_timer = setTimeout(() => reconnect(), 5000)
     }
 
     const reconnect = () => {
 
         clearInterval(heartbeat)
-
+        clearTimeout(reconnect_timer);
+        
         const url = getReplaceUrl(registration.instanceUrl);
-        const ws = new WebSocket(`${url}/api/v1/streaming/?access_token=${registration.accessToken}&stream=user`)
+        last_stream_url = `${url}/api/v1/streaming/?access_token=${registration.accessToken}&stream=user`;
+        const ws = new WebSocket(last_stream_url)
 
         ws.on('open', () => {
             if (ws.readyState != 1) {
