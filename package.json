@@ -4,16 +4,15 @@
     "description": "relays notification from Mastodon's Streaming API to registered callback",
     "main": "mastodon-streaming-listener.js",
     "scripts": {
-        "start": "babel-node ./mastodon-streaming-listener.js --presets es2015,stage-2"
+        "start": "rm -f ./tmp/mastodon-streaming-listener.js; babel ./mastodon-streaming-listener.js  --out-dir ./tmp && node ./tmp/mastodon-streaming-listener.js"
     },
     "author": "tateisu <tateisu@gmail.com>",
     "license": "MIT",
     "dependencies": {
         "dotenv": "^4.0.0",
+        "babel-preset-env": "^1.5.1",
         "axios": "^0.15.3",
         "babel-cli": "^6.23.0",
-        "babel-preset-es2015": "^6.22.0",
-        "babel-preset-stage-2": "^6.22.0",
         "body-parser": "^1.17.1",
         "express": "^4.15.2",
         "morgan": "^1.8.1",
