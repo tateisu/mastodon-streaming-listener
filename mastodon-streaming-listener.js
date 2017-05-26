@@ -254,7 +254,7 @@ const connectForUser = (registration) => {
     }
 
     const onError = error => {
-        log('error', `onError. url=${last_stream_url}, error=${error}`);
+        log('error', `onError. url=${last_stream_url}, error=` + util.inspect(error));
         clearTimeout(reconnect_timer);
         reconnect_timer = setTimeout(() => reconnect(), 5000)
     }
@@ -278,7 +278,6 @@ const connectForUser = (registration) => {
         
         const url = getReplaceUrl(registration.instanceUrl);
         last_stream_url = `${url}/api/v1/streaming/?access_token=${registration.accessToken}&stream=user`;
-        last_stream_url = last_stream_url.replace(/\https?/,'wss');
         const ws = new WebSocket(last_stream_url)
 
         ws.on('open', () => {
