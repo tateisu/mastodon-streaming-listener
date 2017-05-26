@@ -198,6 +198,7 @@ const connectForUser = (registration) => {
     let last_check = 0
     let last_stream_url;
     let reconnect_timer;
+    let location_url;
 
     const close = () => {
         clearInterval(heartbeat)
@@ -252,27 +253,31 @@ const connectForUser = (registration) => {
             log('error', `Error sending to FCM, status: ${error.response.status}: ${JSON.stringify(error.response.data)}`)
         })
     }
-
-    let location_url;
     
-    const onUnexpectedResponse = (req,res) => {
-        // log('info', "onUnexpectedResponse. res="+util.inspect(res));
-        
-        location_url = null;
-        if( "301" == res.statusCode ){
-            location_url = res.headers.location;
-        }
-        return false;
-    }
-
-    const onError = error => {
-        log('error', `onError. url=${last_stream_url}, error=` + util.inspect(error));
+    const scheduleReconnect = ()=>{
         clearTimeout(reconnect_timer);
         if( location_url ){
             reconnect_timer = setTimeout(() => reconnect(), 1000)
         }else{
             reconnect_timer = setTimeout(() => reconnect(), 5000)
         }
+    }
+
+    
+    const onUnexpectedResponse = (req,res) => {
+        log('info', `onUnexpectedResponse. statusCode=${res.statusCode}. url=${last_stream_url}`);
+        
+        location_url = null;
+        if( "301" == res.statusCode && res.headers.location ){
+            location_url =  res.headers.location;
+        }
+        scheduleReconnect();
+    }
+
+    const onError = error => {
+        log('error', `onError. url=${last_stream_url}, error=` + util.inspect(error));
+
+        scheduleReconnect();
     }
 
     const onClose = code => {
@@ -283,8 +288,7 @@ const connectForUser = (registration) => {
         }
 
         log('error', `onClose: code=${code}, url=${last_stream_url}`)
-        clearTimeout(reconnect_timer);
-        reconnect_timer = setTimeout(() => reconnect(), 5000)
+        scheduleReconnect();
     }
 
     const reconnect = () => {
