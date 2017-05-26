@@ -253,15 +253,26 @@ const connectForUser = (registration) => {
         })
     }
 
+    let location_url;
+    
     const onUnexpectedResponse = (req,res) => {
-        log('error', "onUnexpectedResponse. res="+util.inspect(res));
+        // log('info', "onUnexpectedResponse. res="+util.inspect(res));
+        
+        location_url = null;
+        if( "301" == res.statusCode ){
+            location_url = res.headers.location;
+        }
         return false;
     }
 
     const onError = error => {
         log('error', `onError. url=${last_stream_url}, error=` + util.inspect(error));
         clearTimeout(reconnect_timer);
-        reconnect_timer = setTimeout(() => reconnect(), 5000)
+        if( location_url ){
+            reconnect_timer = setTimeout(() => reconnect(), 1000)
+        }else{
+            reconnect_timer = setTimeout(() => reconnect(), 5000)
+        }
     }
 
     const onClose = code => {
@@ -282,7 +293,14 @@ const connectForUser = (registration) => {
         clearTimeout(reconnect_timer);
         
         const url = getReplaceUrl(registration.instanceUrl);
-        last_stream_url = `${url}/api/v1/streaming/?access_token=${registration.accessToken}&stream=user`;
+        
+        if( location_url ){
+            last_stream_url = location_url;
+            location_url = null;
+        }else{
+            last_stream_url = `${url}/api/v1/streaming/?access_token=${registration.accessToken}&stream=user`;
+        }
+        
         const ws = new WebSocket(last_stream_url)
 
         ws.on('open', () => {
