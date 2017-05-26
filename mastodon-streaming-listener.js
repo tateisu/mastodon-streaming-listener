@@ -8,6 +8,9 @@ import Sequelize from 'sequelize'
 import Hjson from 'hjson'
 import fs from 'fs'
 import util from 'util'
+import dotenv from 'dotenv'
+
+dotenv.config({ path: '.env.production' });
 
 const app = express()
 const port = process.env.PORT || 4002
@@ -171,6 +174,17 @@ const getReplaceUrl = (instanceUrl) => {
     return instanceUrl;
 }
 
+const getEndpoint = (instanceUrl) => {
+    if (instanceUrl) {
+        var instanceEntry = instanceMap[instanceUrl];
+        if (instanceEntry) {
+            const endpoint = instanceEntry.endpoint;
+            if (endpoint) return endpoint;
+        }
+    }
+    return 'user';
+}
+
 const checkAccessToken = (accessToken) => {
     if (!accessToken) {
         return 'missing access_token';
@@ -304,7 +318,8 @@ const connectForUser = (registration) => {
             location_url = null;
         } else {
             const url = getReplaceUrl(registration.instanceUrl);
-            last_stream_url = `${url}/api/v1/streaming/?access_token=${registration.accessToken}&stream=user`;
+            const endpoint = getEndpoint(registration.instanceUrl);
+            last_stream_url = `${url}/api/v1/streaming/?access_token=${registration.accessToken}&stream=${endpoint}`;
         }
 
         const ws = new WebSocket(last_stream_url)

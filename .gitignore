@@ -3,3 +3,6 @@ node_modules/
 config/*.hjson
 .eslintrc
 .jshintrc
+tmp/
+log/
+.env.production
