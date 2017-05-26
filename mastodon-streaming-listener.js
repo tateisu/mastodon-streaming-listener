@@ -116,7 +116,7 @@ const checkAppId = (appId, appSecret) => {
     }
 
     if (appEntry.secret !== appSecret) {
-        return 'app_secret not match. app: ' +appId+', secret:'+appSecret;
+        return 'app_secret not match. app: ' + appId + ', secret:' + appSecret;
     }
 
     return null;
@@ -212,7 +212,7 @@ const connectForUser = (registration) => {
         return false;
     }
 
-    error = checkInstanceUrl(registration.instanceUrl,registration.appId)
+    error = checkInstanceUrl(registration.instanceUrl, registration.appId)
     if (error) {
         log('error', error);
         close();
@@ -220,7 +220,7 @@ const connectForUser = (registration) => {
     }
 
     log('info', 'making WebSocket')
-    
+
 
     const onMessage = data => {
         const json = JSON.parse(data)
@@ -253,24 +253,25 @@ const connectForUser = (registration) => {
             log('error', `Error sending to FCM, status: ${error.response.status}: ${JSON.stringify(error.response.data)}`)
         })
     }
-    
-    const scheduleReconnect = ()=>{
+
+    const scheduleReconnect = () => {
+        clearInterval(heartbeat)
         clearTimeout(reconnect_timer);
-        if( location_url ){
+        if (location_url) {
             reconnect_timer = setTimeout(() => reconnect(), 1000)
-        }else{
+        } else {
             reconnect_timer = setTimeout(() => reconnect(), 5000)
         }
     }
 
-    
-    const onUnexpectedResponse = (req,res) => {
+    const onUnexpectedResponse = (req, res) => {
         log('info', `onUnexpectedResponse. statusCode=${res.statusCode}. url=${last_stream_url}`);
-        
+
         location_url = null;
-        if( "301" == res.statusCode && res.headers.location ){
-            location_url =  res.headers.location;
+        if ("301" == res.statusCode && res.headers.location) {
+            location_url = res.headers.location;
         }
+
         scheduleReconnect();
     }
 
@@ -295,16 +296,17 @@ const connectForUser = (registration) => {
 
         clearInterval(heartbeat)
         clearTimeout(reconnect_timer);
-        
-        const url = getReplaceUrl(registration.instanceUrl);
-        
-        if( location_url ){
+
+        if (location_url) {
+            // 301レスポンスで知らされたURLがあれば優先的に使う
             last_stream_url = location_url;
+            // 時間経過でアクセストークンが変化する場合があるので、このURLは使い捨てで次回再接続するときは通常のURLから始める
             location_url = null;
-        }else{
+        } else {
+            const url = getReplaceUrl(registration.instanceUrl);
             last_stream_url = `${url}/api/v1/streaming/?access_token=${registration.accessToken}&stream=user`;
         }
-        
+
         const ws = new WebSocket(last_stream_url)
 
         ws.on('open', () => {
@@ -346,7 +348,7 @@ const connectForUser = (registration) => {
         ws.on('message', onMessage)
         ws.on('error', onError)
         ws.on('close', onClose)
-        ws.on('unexpected-response',onUnexpectedResponse)
+        ws.on('unexpected-response', onUnexpectedResponse)
 
         wsStorage[ws_key] = ws;
     }
@@ -406,7 +408,7 @@ app.post('/register', (req, res) => {
     const appSecret = req.body.app_secret
     error = checkAppId(appId, appSecret)
     if (error) {
-        log('error',error)
+        log('error', error)
         res.status(400).send(error);
         return;
     }
@@ -414,7 +416,7 @@ app.post('/register', (req, res) => {
     const instanceUrl = req.body.instance_url.toLowerCase();
     error = checkInstanceUrl(instanceUrl, appId)
     if (error) {
-        log('error',error)
+        log('error', error)
         res.status(400).send(error);
         return;
     }
@@ -422,7 +424,7 @@ app.post('/register', (req, res) => {
     const accessToken = req.body.access_token
     error = checkAccessToken(accessToken)
     if (error) {
-        log('error',error)
+        log('error', error)
         res.status(400).send(error);
         return;
     }
