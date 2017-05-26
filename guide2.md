@@ -73,7 +73,7 @@ root      5929  0.0  0.1 413060  5232 ?        Sl   12:32   0:00  |   \_
 ## 通知リスナ設定ファイルの作成
 
 - 以下のようなファイルを作成して、Webから見える場所に設置します。設置したらURLをメモしておいてください。(B)
-- urlStreamingListenerRegisterとurlStreamingListenerUnregister にはあなたのStreaming Listener のAPI andpoint URL を記載します。
+- urlStreamingListenerRegister と urlStreamingListenerUnregister にはあなたのStreaming Listener のAPI endpoint URL を記載します。
 - appId にはアプリIDを記載します。
 ```
 {
