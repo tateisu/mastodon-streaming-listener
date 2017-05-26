@@ -8,6 +8,9 @@ import Sequelize from 'sequelize'
 import Hjson from 'hjson'
 import fs from 'fs'
 import util from 'util'
+import dotenv from 'dotenv'
+
+dotenv.config({ path: '.env.production' });
 
 const app = express()
 const port = process.env.PORT || 4002
