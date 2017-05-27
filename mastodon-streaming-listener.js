@@ -268,13 +268,34 @@ const connectForUser = (registration) => {
         })
     }
 
+    const reloadRegistration = () => {
+        return Registration.findOne({
+            where: {
+                instanceUrl: registration.instanceUrl,
+                appId: registration.appId,
+                tag: registration.tag
+            }
+        }).then((r) => {
+            if (!r) {
+                log('error', 'Error reloading registration: record not found.')
+            } else {
+                registration = r
+            }
+        }).catch((err) => {
+            log('error', `Error reloading registration: ${err}.`)
+            return;
+        })
+    }
+
     const scheduleReconnect = () => {
         clearInterval(heartbeat)
         clearTimeout(reconnect_timer);
         if (location_url) {
             reconnect_timer = setTimeout(() => reconnect(), 1000)
         } else {
-            reconnect_timer = setTimeout(() => reconnect(), 5000)
+            reloadRegistration().then(() => {
+                reconnect_timer = setTimeout(() => reconnect(), 5000)
+            })
         }
     }
 
@@ -284,6 +305,12 @@ const connectForUser = (registration) => {
         location_url = null;
         if ("301" == res.statusCode && res.headers.location) {
             location_url = res.headers.location;
+        }
+
+        if ("401" == res.statusCode) {
+            // access_token seems revoked.
+            close();
+            return;
         }
 
         scheduleReconnect();
@@ -448,7 +475,7 @@ app.post('/register', (req, res) => {
     const tag = req.body.tag
 
     /////////////////////////////////////
-    // check instance url 
+    // check instance url
 
     Registration.findOrCreate({
         where: {
