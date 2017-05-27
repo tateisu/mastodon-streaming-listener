@@ -213,7 +213,6 @@ const connectForUser = (registration) => {
     let last_stream_url;
     let reconnect_timer;
     let location_url;
-    let token_seems_revoked;
 
     const close = () => {
         clearInterval(heartbeat)
@@ -269,15 +268,34 @@ const connectForUser = (registration) => {
         })
     }
 
+    const reloadRegistration = () => {
+        return Registration.findOne({
+            where: {
+                instanceUrl: registration.instanceUrl,
+                appId: registration.appId,
+                tag: registration.tag
+            }
+        }).then((r) => {
+            if (!r) {
+                log('error', 'Error reloading registration: record not found.')
+            } else {
+                registration = r
+            }
+        }).catch((err) => {
+            log('error', `Error reloading registration: ${err}.`)
+            return;
+        })
+    }
+
     const scheduleReconnect = () => {
         clearInterval(heartbeat)
         clearTimeout(reconnect_timer);
-        if (token_seems_revoked) {
-            reconnect_timer = setTimeout(() => reconnect(), 6*60*60*1000)
-        } else if (location_url) {
+        if (location_url) {
             reconnect_timer = setTimeout(() => reconnect(), 1000)
         } else {
-            reconnect_timer = setTimeout(() => reconnect(), 5000)
+            reloadRegistration().then(() => {
+                reconnect_timer = setTimeout(() => reconnect(), 5000)
+            })
         }
     }
 
@@ -289,10 +307,10 @@ const connectForUser = (registration) => {
             location_url = res.headers.location;
         }
 
-        token_seems_revoked = null;
         if ("401" == res.statusCode) {
-          // access_token seems revoked.
-          token_seems_revoked = true;
+            // access_token seems revoked.
+            close();
+            return;
         }
 
         scheduleReconnect();
