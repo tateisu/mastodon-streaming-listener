@@ -223,7 +223,7 @@ const ListenerConnection = function (log, ws_key, registration) {
             return
         }
 
-        log('info', `notification received: ${json.event}`)
+        log('info', "notification received.")
 
         // send to callback
 
@@ -382,7 +382,6 @@ const ListenerConnection = function (log, ws_key, registration) {
         })
     }
 
-    log('info', 'making WebSocket')
     reconnect()
 }
 
@@ -405,10 +404,13 @@ ListenerConnection.prototype.dispose = function () {
     const self = this;
 
     self.isDisposed = true;
+
     self.clearTimers();
 
     try {
-        if (self.webSocket) self.webSocket.close();
+        if (self.webSocket) {
+            self.webSocket.close();
+        }
     } catch (e) {
         self.log('error', "dispose: webSocket.close() failed. " + e)
     }
@@ -436,6 +438,7 @@ const connectForUser = (registration) => {
     if (listenerConnectionMap[ws_key]) {
         log('info', 'Already registered')
     } else {
+        log('info', 'Making ListenerConnection')
         // reconnectの非同期処理の間に connectForUser が呼ばれた時に 'Already registered' を返せるように
         // この時点で listenerConnectionMap[ws_key] を初期化する
         listenerConnectionMap[ws_key] = new ListenerConnection(log, ws_key, registration);
