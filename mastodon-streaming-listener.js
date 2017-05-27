@@ -391,6 +391,8 @@ const ListenerConnection = function (log, ws_key, registration) {
 ListenerConnection.prototype.clearTimers = () => {
     const self = this;
 
+    npmlog.log('info',"debug","clearTimers "+ util.inspect(self))
+    
     if (self.heartbeat) {
         clearInterval(self.heartbeat)
         self.heartbeat = null
