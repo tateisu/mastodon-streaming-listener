@@ -213,6 +213,7 @@ const connectForUser = (registration) => {
     let last_stream_url;
     let reconnect_timer;
     let location_url;
+    let token_seems_revoked;
 
     const close = () => {
         clearInterval(heartbeat)
@@ -271,7 +272,9 @@ const connectForUser = (registration) => {
     const scheduleReconnect = () => {
         clearInterval(heartbeat)
         clearTimeout(reconnect_timer);
-        if (location_url) {
+        if (token_seems_revoked) {
+            reconnect_timer = setTimeout(() => reconnect(), 6*60*60*1000)
+        } else if (location_url) {
             reconnect_timer = setTimeout(() => reconnect(), 1000)
         } else {
             reconnect_timer = setTimeout(() => reconnect(), 5000)
@@ -284,6 +287,12 @@ const connectForUser = (registration) => {
         location_url = null;
         if ("301" == res.statusCode && res.headers.location) {
             location_url = res.headers.location;
+        }
+
+        token_seems_revoked = null;
+        if ("401" == res.statusCode) {
+          // access_token seems revoked.
+          token_seems_revoked = true;
         }
 
         scheduleReconnect();
@@ -448,7 +457,7 @@ app.post('/register', (req, res) => {
     const tag = req.body.tag
 
     /////////////////////////////////////
-    // check instance url 
+    // check instance url
 
     Registration.findOrCreate({
         where: {
