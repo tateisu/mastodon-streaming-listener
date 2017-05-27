@@ -10,11 +10,12 @@ import fs from 'fs'
 import util from 'util'
 import dotenv from 'dotenv'
 
-dotenv.config({ path: '.env.production' });
+dotenv.config({
+    path: '.env.production'
+});
 
 const app = express()
 const port = process.env.PORT || 4002
-const wsStorage = {}
 
 process.on('unhandledRejection', console.dir);
 
@@ -196,48 +197,27 @@ const checkAccessToken = (accessToken) => {
     return null;
 }
 
+// disposable connection keeper
+const listenerConnectionMap = {}
+const ListenerConnection = function (log, ws_key, registration) {
 
-const connectForUser = (registration) => {
+    const self = this;
 
-    const ws_key = `${registration.instanceUrl}:${registration.appId}:${registration.tag}`;
+    self.log = log;
+    self.heartbeat = null;
+    self.reconnect_timer = null;
+    self.webSocket = null;
 
-    const log = (level, message) => npmlog.log(level, ws_key, message)
-
-    if (typeof wsStorage[ws_key] !== 'undefined') {
-        log('info', 'Already registered')
-        return true;
-    }
-
-    let heartbeat
     let last_check = 0
-    let last_stream_url;
-    let reconnect_timer;
-    let location_url;
-
-    const close = () => {
-        clearInterval(heartbeat)
-        disconnectForUser(registration);
-    }
-
-    var error = checkAppId(registration.appId, registration.appSecret);
-    if (error) {
-        log('error', error);
-        close();
-        return false;
-    }
-
-    error = checkInstanceUrl(registration.instanceUrl, registration.appId)
-    if (error) {
-        log('error', error);
-        close();
-        return false;
-    }
-
-    log('info', 'making WebSocket')
-
+    let last_stream_url
+    let location_url
 
     const onMessage = data => {
         const json = JSON.parse(data)
+
+        if (self.isDisposed) {
+            return;
+        }
 
         if (json.event !== 'notification') {
             return
@@ -268,95 +248,108 @@ const connectForUser = (registration) => {
         })
     }
 
-    const reloadRegistration = () => {
-        return Registration.findOne({
-            where: {
-                instanceUrl: registration.instanceUrl,
-                appId: registration.appId,
-                tag: registration.tag
-            }
-        }).then((r) => {
-            if (!r) {
-                log('error', 'Error reloading registration: record not found.')
-            } else {
-                registration = r
-            }
-        }).catch((err) => {
-            log('error', `Error reloading registration: ${err}.`)
-            return;
-        })
-    }
-
     const scheduleReconnect = () => {
-        clearInterval(heartbeat)
-        clearTimeout(reconnect_timer);
-        if (location_url) {
-            reconnect_timer = setTimeout(() => reconnect(), 1000)
-        } else {
-            reloadRegistration().then(() => {
-                reconnect_timer = setTimeout(() => reconnect(), 5000)
-            })
+
+        self.clearTimers()
+
+        if (!self.isDisposed) {
+            this.reconnect_timer = setTimeout(() => reconnect(), location_url ? 1000 : 5000)
         }
     }
 
     const onUnexpectedResponse = (req, res) => {
         log('info', `onUnexpectedResponse. statusCode=${res.statusCode}. url=${last_stream_url}`);
 
-        location_url = null;
-        if ("301" == res.statusCode && res.headers.location) {
-            location_url = res.headers.location;
-        }
-
         if ("401" == res.statusCode) {
             // access_token seems revoked.
-            close();
-            return;
+            disconnectForUser(registration);
+            return
         }
 
-        scheduleReconnect();
+        location_url = null
+        if ("301" == res.statusCode && res.headers.location) {
+            location_url = res.headers.location
+        }
+
+        scheduleReconnect()
     }
 
     const onError = error => {
         log('error', `onError. url=${last_stream_url}, error=` + util.inspect(error));
 
-        scheduleReconnect();
+        scheduleReconnect()
     }
 
     const onClose = code => {
         if (code === 1000) {
             log('info', 'onClose : Remote server closed connection')
-            close()
+            disconnectForUser(registration);
             return
         }
 
         log('error', `onClose: code=${code}, url=${last_stream_url}`)
-        scheduleReconnect();
+        scheduleReconnect()
     }
 
     const reconnect = () => {
 
-        clearInterval(heartbeat)
-        clearTimeout(reconnect_timer);
+        self.clearTimers()
+        clearInterval(self.heartbeat)
+        clearTimeout(self.reconnect_timer)
 
-        if (location_url) {
-            // 301レスポンスで知らされたURLがあれば優先的に使う
-            last_stream_url = location_url;
-            // 時間経過でアクセストークンが変化する場合があるので、このURLは使い捨てで次回再接続するときは通常のURLから始める
-            location_url = null;
-        } else {
-            const url = getReplaceUrl(registration.instanceUrl);
-            const endpoint = getEndpoint(registration.instanceUrl);
-            last_stream_url = `${url}/api/v1/streaming/?access_token=${registration.accessToken}&stream=${endpoint}`;
-        }
+        // アクセストークンが変更されているかもしれないのでリロード
+        Registration.findOne({
+            where: {
+                instanceUrl: registration.instanceUrl,
+                appId: registration.appId,
+                tag: registration.tag
+            }
+        }).then((r) => {
 
-        const ws = new WebSocket(last_stream_url)
+            if (self.isDisposed) {
+                // DBクエリしてる間にこの接続オブジェクトは破棄されていた
+                return
+            }
 
-        ws.on('open', () => {
-            if (ws.readyState != 1) {
-                log('error', `Client state is: ${ws.readyState}`)
+            if (!r) {
+                // いつのまにか登録が解除されていた
+                log('error', 'Error reloading registration: record not found.')
+                return;
+            }
+
+            // リロードした設定を反映する
+            registration = r
+
+            // 接続先URLの決定
+            if (location_url) {
+                // 301レスポンスで知らされたURLがあれば優先的に使う
+                last_stream_url = location_url;
+                // 時間経過でアクセストークンが変化する場合があるので、このURLは使い捨てで次回再接続するときは通常のURLから始める
+                location_url = null;
             } else {
+                const url = getReplaceUrl(registration.instanceUrl);
+                const endpoint = getEndpoint(registration.instanceUrl);
+                last_stream_url = `${url}/api/v1/streaming/?access_token=${registration.accessToken}&stream=${endpoint}`;
+            }
+
+            const ws = self.webSocket = new WebSocket(last_stream_url)
+
+            ws.on('open', () => {
+
+                if (ws.readyState != 1) {
+                    // Connected 以外の状態
+                    log('error', `Client state is: ${ws.readyState}`)
+                    return
+                }
+
+                if (self.isDisposed) {
+                    // この接続は破棄されていた
+                    ws.close();
+                    return
+                }
+
                 log('info', 'Connected')
-                heartbeat = setInterval(() => {
+                self.heartbeat = setInterval(() => {
 
                     ws.ping();
 
@@ -371,44 +364,98 @@ const connectForUser = (registration) => {
                                 tag: registration.tag
                             }
                         }).then((r) => {
-                            if (!r) {
-                                close();
-                                return;
-                            }
-                            if (now - r.lastUpdate >= 86400000 * 3) {
+                            if (r && now - r.lastUpdate >= 86400000 * 3) {
                                 log('error', 'registration expired.')
-                                close();
+                                disconnectForUser(registration);
                                 return;
                             }
                         })
-
                     }
                 }, 10000)
-            }
+            })
+
+            ws.on('message', onMessage)
+            ws.on('error', onError)
+            ws.on('close', onClose)
+            ws.on('unexpected-response', onUnexpectedResponse)
+        }).catch((err) => {
+            log('error', `Error reloading registration: ${err}.`)
+            return;
         })
-
-        ws.on('message', onMessage)
-        ws.on('error', onError)
-        ws.on('close', onClose)
-        ws.on('unexpected-response', onUnexpectedResponse)
-
-        wsStorage[ws_key] = ws;
     }
 
+    log('info', 'making WebSocket')
     reconnect()
+}
+
+ListenerConnection.prototype.clearTimers = () => {
+    const self = this;
+
+    if (self.heartbeat) {
+        clearInterval(self.heartbeat)
+        self.heartbeat = null
+
+    }
+
+    if (self.reconnect_timer) {
+        clearTimeout(self.reconnect_timer)
+        self.reconnect_timer = null
+    }
+}
+
+ListenerConnection.prototype.dispose = () => {
+    const self = this;
+
+    self.isDisposed = true;
+    self.clearTimers();
+
+    try {
+        if (self.webSocket) self.webSocket.close();
+    } catch (e) {
+        self.log('error', "dispose: webSocket.close() failed. " + e)
+    }
+}
+
+const connectForUser = (registration) => {
+
+    const ws_key = `${registration.instanceUrl}:${registration.appId}:${registration.tag}`;
+    const log = (level, message) => npmlog.log(level, ws_key, message)
+
+    var error = checkAppId(registration.appId, registration.appSecret);
+    if (error) {
+        log('error', error);
+        disconnectForUser(registration);
+        return false;
+    }
+
+    error = checkInstanceUrl(registration.instanceUrl, registration.appId)
+    if (error) {
+        log('error', error);
+        disconnectForUser(registration);
+        return false;
+    }
+
+    if (listenerConnectionMap[ws_key]) {
+        log('info', 'Already registered')
+    } else {
+        // reconnectの非同期処理の間に connectForUser が呼ばれた時に 'Already registered' を返せるように
+        // この時点で listenerConnectionMap[ws_key] を初期化する
+        listenerConnectionMap[ws_key] = new ListenerConnection(log, ws_key, registration);
+    }
+
+    return true;
 }
 
 const disconnectForUser = (registration) => {
 
     const ws_key = `${registration.instanceUrl}:${registration.appId}:${registration.tag}`;
-
     const log = (level, message) => npmlog.log(level, ws_key, message)
 
-    const ws = wsStorage[ws_key]
-    if (typeof ws !== 'undefined') {
-        ws.close()
-        delete wsStorage[ws_key]
-        log('info', 'WebSocket removed.')
+    const listenerConnection = listenerConnectionMap[ws_key]
+    if (listenerConnection) {
+        listenerConnection.dispose()
+        delete listenerConnectionMap[ws_key]
+        log('info', 'ListenerConnection disposed.');
     }
 
     registration.destroy();
