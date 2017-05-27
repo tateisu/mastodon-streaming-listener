@@ -202,7 +202,6 @@ const listenerConnectionMap = {}
 const ListenerConnection = function (log, ws_key, registration) {
 
     const self = this;
-    npmlog.log('info',"debug","ListenerConnection ctor "+ util.inspect(self))
 
     self.log = log;
     self.heartbeat = null;
@@ -295,8 +294,6 @@ const ListenerConnection = function (log, ws_key, registration) {
     const reconnect = () => {
 
         self.clearTimers()
-        clearInterval(self.heartbeat)
-        clearTimeout(self.reconnect_timer)
 
         // アクセストークンが変更されているかもしれないのでリロード
         Registration.findOne({
@@ -389,7 +386,7 @@ const ListenerConnection = function (log, ws_key, registration) {
     reconnect()
 }
 
-ListenerConnection.prototype.clearTimers = () => {
+ListenerConnection.prototype.clearTimers = function () {
     const self = this;
 
     npmlog.log('info',"debug","clearTimers "+ util.inspect(self))
@@ -406,7 +403,7 @@ ListenerConnection.prototype.clearTimers = () => {
     }
 }
 
-ListenerConnection.prototype.dispose = () => {
+ListenerConnection.prototype.dispose = function () {
     const self = this;
 
     self.isDisposed = true;
