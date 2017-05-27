@@ -202,6 +202,7 @@ const listenerConnectionMap = {}
 const ListenerConnection = function (log, ws_key, registration) {
 
     const self = this;
+    npmlog.log('info',"debug","ListenerConnection ctor "+ util.inspect(self))
 
     self.log = log;
     self.heartbeat = null;
