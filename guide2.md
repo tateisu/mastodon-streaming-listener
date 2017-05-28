@@ -60,7 +60,7 @@ Streaming Listenerがあなたを識別できるように、特別なアプリID
 ### Streaming Listener へのHUP
 
 - 設定変更が終わったら Streaming Listener にHUPシグナルを送ります。
-- PS auxwf すると 関連プロセスが5行くらいあるんですが、一番深いプロセスのPID に向けて kill -HUP (pid) します。
+- PS auxwf すると 関連プロセスが4-5行くらいあるんですが、一番深いプロセスのPID に向けて kill -HUP (pid) します。
 
 ```
 root      5929  0.0  0.1 413060  5232 ?        Sl   12:32   0:00  |   \_ docker-containerd-shim a1161b21f0e9df419cf2ac95271a7125590c9e505457c95a4d5a1f5f6c58d074 /var/run/docker/libcontainerd/a1161b21f0e9df419cf2ac95271a7125590
