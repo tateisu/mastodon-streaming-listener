@@ -275,7 +275,7 @@ const ListenerConnection = function (log, ws_key, registration) {
     }
 
     const onError = error => {
-        log('error', `onError. url=${last_stream_url}, error=` + util.inspect(error));
+        log('error', `onError. date=${new Date().toLocaleString()}, url=${last_stream_url}, error=` + util.inspect(error));
 
         scheduleReconnect()
     }
@@ -287,7 +287,7 @@ const ListenerConnection = function (log, ws_key, registration) {
             return
         }
 
-        log('error', `onClose: code=${code}, url=${last_stream_url}`)
+        log('error', `onClose: date=${new Date().toLocaleString()}, code=${code}, url=${last_stream_url}`)
         scheduleReconnect()
     }
 
@@ -369,7 +369,7 @@ const ListenerConnection = function (log, ws_key, registration) {
                             }
                         })
                     }
-                }, 10000)
+                }, 5000)
             })
 
             ws.on('message', onMessage)
