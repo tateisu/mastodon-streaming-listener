@@ -369,7 +369,7 @@ const ListenerConnection = function (log, ws_key, registration) {
                             }
                         })
                     }
-                }, 5000)
+                }, 10000)
             })
 
             ws.on('message', onMessage)
