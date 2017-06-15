@@ -19,6 +19,9 @@ const port = process.env.PORT || 4002
 
 process.on('unhandledRejection', console.dir);
 
+/////////////////////////////////////////////////////////////////////////
+// DB connection
+
 const sequelize = new Sequelize(
     process.env.DB_NAME,
     process.env.DB_USER,
@@ -30,43 +33,7 @@ const sequelize = new Sequelize(
     }
 )
 
-var appMap;
-var instanceMap;
-const loadSetting = () => {
-    //
-    var file = 'config/app_map.hjson';
-    try {
-        appMap = Hjson.parse(fs.readFileSync(file, 'utf8'));
-    } catch (e) {
-        npmlog.log('error', file, e)
-        throw e
-    }
-    //
-    file = 'config/instance_map.hjson';
-    try {
-        instanceMap = Hjson.parse(fs.readFileSync(file, 'utf8'));
-    } catch (e) {
-        npmlog.log('error', file, e)
-        throw e
-    }
-}
-
-try {
-    loadSetting();
-} catch (e) {
-    npmlog.log('error', 'loadSetting', e.stack)
-    process.exit();
-}
-
-process.on('SIGHUP', function () {
-    console.log('SIGHUP received. loading setting..');
-    try {
-        loadSetting();
-    } catch (e) {
-        npmlog.log('error', 'loadSetting', e.stack)
-    }
-});
-
+// Model definition 
 
 const Registration = sequelize.define('stream_listener_registration', {
 
@@ -97,6 +64,10 @@ const Registration = sequelize.define('stream_listener_registration', {
 
     tag: {
         type: Sequelize.STRING
+    },
+
+    endpoint: {
+        type: Sequelize.STRING
     }
 }, {
     indexes: [
@@ -109,6 +80,121 @@ const Registration = sequelize.define('stream_listener_registration', {
 
 })
 
+///////////////////////////////////////////////////////////////////////
+// configuration file
+
+var appMap;
+var instanceMap;
+
+const loadSetting = () => {
+    //
+    var file = 'config/app_map.hjson';
+    try {
+        appMap = Hjson.parse(fs.readFileSync(file, 'utf8'));
+    } catch (e) {
+        npmlog.log('error', file, e)
+        throw e
+    }
+    //
+    file = 'config/instance_map.hjson';
+    try {
+        instanceMap = Hjson.parse(fs.readFileSync(file, 'utf8'));
+    } catch (e) {
+        npmlog.log('error', file, e)
+        throw e
+    }
+}
+
+try {
+    loadSetting();
+} catch (e) {
+    npmlog.log('error', 'loadSetting', e.stack)
+    process.exit();
+}
+
+// SIGHUPで設定を読み直す
+process.on('SIGHUP', function () {
+    console.log('SIGHUP received. loading setting..');
+    try {
+        loadSetting();
+    } catch (e) {
+        npmlog.log('error', 'loadSetting', e.stack)
+    }
+});
+
+///////////////////////////////////////////////////////////////////////
+// version string comparator
+
+const reVersionStringToken = /\d+|\.|[^\d.]+/g
+const reDigits = /\d+/
+
+const tokenizeVersionString = (src) => {
+    var array = src.toString().match(reVersionStringToken);
+    if (array) {
+        return array
+    }
+    return []
+}
+
+const compareVersionString = (src_a, src_b) => {
+
+    // null はそれ以外の文字列より小さい
+    // jslintが警告を出すが、null or undefined のチェックを行いたいので == を使う
+    if (src_a == null) {
+        return src_b == null ? 0 : -1
+    } else if (src_b == null) {
+        return 1
+    }
+
+    var array_a = tokenizeVersionString(src_a)
+    var array_b = tokenizeVersionString(src_b)
+    for (;;) {
+        var a = array_a.shift();
+        var b = array_b.shift();
+
+        // 終端チェック
+        if (a === undefined) {
+            return b === undefined ? 0 : -1
+        } else if (b === undefined) {
+            return 1; // a is defined, b is not defined
+        }
+
+        // 同じ値なら次のトークンを比較
+        if (a == b) {
+            continue;
+        }
+
+        // . は数字よりもその他の文字列よりも大きい
+        if (a === '.') {
+            return 1;
+        }
+        if (b === '.') {
+            return -1;
+        }
+
+        var isNum_a = a.test(reDigits)
+        var isNum_b = b.test(reDigits)
+
+        // 数字同士なら数値を比較
+        if (isNum_a && isNum_b) {
+            var i = parseInt(a, 10) - parseInt(b, 10)
+            return i < 0 ? -1 : 1 // 同じ値になることはない
+        }
+
+        // 数値とその他の文字列なら、数値の方が小さい
+        if (isNum_a) {
+            return -1;
+        }
+        if (isNum_b) {
+            return 1;
+        }
+
+        // その他の文字列はUnicode順比較
+        return (a < b)
+    }
+}
+
+///////////////////////////////////////////////////////////////////////
 
 const checkAppId = (appId, appSecret) => {
     if (!appId) {
@@ -163,6 +249,21 @@ const checkInstanceUrl = (instanceUrl, appId) => {
     return null;
 }
 
+const ENDPOINT_USER = 'user'
+const ENDPOINT_USER_NOTIFICATION = 'user:notification'
+const ENDPOINT_LIST = [
+    ENDPOINT_USER,
+    ENDPOINT_USER_NOTIFICATION
+]
+
+const checkEndpoint = (endpoint) => {
+    if (!endpoint) return null;
+    for (var i = 0, ie = ENDPOINT_LIST.length; i < ie; ++i) {
+        if (ENDPOINT_LIST[i] == endpoint) return null;
+    }
+    return "bad endpoint parameter. allowed value is " + ENDPOINT_LIST.join(', ') + "."
+}
+
 const getReplaceUrl = (instanceUrl) => {
 
     if (instanceUrl) {
@@ -175,15 +276,40 @@ const getReplaceUrl = (instanceUrl) => {
     return instanceUrl;
 }
 
-const getEndpoint = (instanceUrl) => {
+const getReplaceUrlWeb = (instanceUrl) => {
+
+    if (instanceUrl) {
+        var instanceEntry = instanceMap[instanceUrl];
+        if (instanceEntry) {
+            const replaceUrlWeb = instanceEntry.replaceUrlWeb;
+            if (replaceUrlWeb) return replaceUrlWeb;
+        }
+    }
+    return instanceUrl;
+}
+
+const getEndpoint = (instanceUrl, version, client_endpoint) => {
+
+    if (client_endpoint && client_endpoint.length > 0) {
+        // クライアントからのストリーム種別指定があればそれを優先する
+        return client_endpoint
+    }
+
     if (instanceUrl) {
         var instanceEntry = instanceMap[instanceUrl];
         if (instanceEntry) {
             const endpoint = instanceEntry.endpoint;
+            // インスタンス設定にストリーム種別があればそれを使う
             if (endpoint) return endpoint;
         }
     }
-    return 'user';
+
+    if (compareVersionString(version, '1.4.2') >= 0) {
+        // バージョン1.4.2以降ならデフォルト値は通知ストリーム
+        return ENDPOINT_USER_NOTIFICATION
+    }
+
+    return ENDPOINT_USER
 }
 
 const checkAccessToken = (accessToken) => {
@@ -197,7 +323,10 @@ const checkAccessToken = (accessToken) => {
     return null;
 }
 
-// disposable connection keeper
+/////////////////////////////////////////////////////////////////////////
+// connection keeper
+// - disposable. if once it is disposed, it is not reused and it is not affect to outside of its object.
+
 const listenerConnectionMap = {}
 const ListenerConnection = function (log, ws_key, registration) {
 
@@ -318,6 +447,29 @@ const ListenerConnection = function (log, ws_key, registration) {
             // リロードした設定を反映する
             registration = r
 
+            // /api/v1/instance の取得
+            var replaceUrlWeb = getReplaceUrlWeb(registration.instanceUrl);
+            var informationUrl = `${replaceUrlWeb}/api/v1/instance`;
+            axios.get(
+                informationUrl
+            ).then(response => {
+                log('info', `instance information, status ${response.status}`);
+                log('info', util.inspect(response.data));
+                reconnect_sub(response.data)
+            }).catch(error => {
+                log('error', `instance information request failed, status: ${error.response.status}: ${JSON.stringify(error.response.data)}`)
+                scheduleReconnect()
+            })
+        }).catch((err) => {
+            log('error', `Error reloading registration: ${err}.`)
+            return;
+        })
+    }
+
+    // reconnect 
+    const reconnect_sub = (information) => {
+        try {
+
             // 接続先URLの決定
             if (location_url) {
                 // 301レスポンスで知らされたURLがあれば優先的に使う
@@ -326,7 +478,7 @@ const ListenerConnection = function (log, ws_key, registration) {
                 location_url = null;
             } else {
                 const url = getReplaceUrl(registration.instanceUrl);
-                const endpoint = getEndpoint(registration.instanceUrl);
+                const endpoint = getEndpoint(registration.instanceUrl, information.version, registration.endpoint);
                 last_stream_url = `${url}/api/v1/streaming/?access_token=${registration.accessToken}&stream=${endpoint}`;
             }
 
@@ -376,10 +528,11 @@ const ListenerConnection = function (log, ws_key, registration) {
             ws.on('error', onError)
             ws.on('close', onClose)
             ws.on('unexpected-response', onUnexpectedResponse)
-        }).catch((err) => {
+
+        } catch (err) {
             log('error', `Error reloading registration: ${err}.`)
-            return;
-        })
+        }
+
     }
 
     reconnect()
@@ -519,8 +672,17 @@ app.post('/register', (req, res) => {
         return;
     }
 
+    const endpoint = req.body.endpoint
+    error = checkEndpoint(endpoint)
+    if (error) {
+        log('error', error)
+        res.status(400).send(error);
+        return;
+    }
+
     const callbackUrl = req.body.callback_url
     const tag = req.body.tag
+
 
     /////////////////////////////////////
     // check instance url
@@ -539,7 +701,8 @@ app.post('/register', (req, res) => {
                 lastUpdate: now,
                 accessToken: accessToken,
                 callbackUrl: callbackUrl,
-                appSecret: appSecret
+                appSecret: appSecret,
+                endPoint: endpoint
             }).then((unused) => {
                 connectForUser(model);
             })

@@ -8,8 +8,19 @@
 
     "https://mastodon.juggler.jp": {
 
-        // (optional) replace url to connect.
-        replaceUrl: "http://172.17.0.1:4000"
+        // (optional) replace URL prefix of Streaming API.
+        //
+        // replaceUrl: "http://172.17.0.1:4000"
+        
+        // (optional) replace URL prefix of Non-Streaming API.
+        // this is used to GET /api/v1/instance
+        //
+        // replaceUrlWeb: "http://172.0.1:3000"
+        
+        // (optional) default stream type. one of "user", "user:notification". 
+        // "user:notification" is introduced on Mastodon v1.4.2
+        //
+        // endpoint: "user"
     }
 
     // if you want don't limit instance to listen, uncomment this.
