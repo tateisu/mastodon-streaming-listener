@@ -463,8 +463,7 @@ const ListenerConnection = function (log, ws_key, registration) {
             axios.get(
                 informationUrl
             ).then(response => {
-                log('info', `instance information, status ${response.status}`);
-                log('info', util.inspect(response.data));
+                log('info', `instance information, status ${response.status}, version=${response.data.version}`);
                 reconnect_sub(response.data)
             }).catch(error => {
                 log('error', `instance information request failed, status: ${error.response.status}: ${JSON.stringify(error.response.data)}`)
