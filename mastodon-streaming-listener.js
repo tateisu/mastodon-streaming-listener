@@ -256,6 +256,8 @@ const ENDPOINT_LIST = [
     ENDPOINT_USER_NOTIFICATION
 ]
 
+const reWss = /^wss\b/
+
 const checkEndpoint = (endpoint) => {
     if (!endpoint) return null;
     for (var i = 0, ie = ENDPOINT_LIST.length; i < ie; ++i) {
@@ -264,7 +266,7 @@ const checkEndpoint = (endpoint) => {
     return "bad endpoint parameter. allowed value is " + ENDPOINT_LIST.join(', ') + "."
 }
 
-const getReplaceUrl = (instanceUrl) => {
+const getReplaceUrl = (instanceUrl,information_urls) => {
 
     if (instanceUrl) {
         var instanceEntry = instanceMap[instanceUrl];
@@ -273,6 +275,14 @@ const getReplaceUrl = (instanceUrl) => {
             if (replaceUrl) return replaceUrl;
         }
     }
+    
+    if( information_urls ){
+        const streaming_api = information_urls.streaming_api
+        if( streaming_api ){
+            return streaming_api.replace(reWss,"https")
+        }
+    }
+    
     return instanceUrl;
 }
 
@@ -477,10 +487,12 @@ const ListenerConnection = function (log, ws_key, registration) {
                 // 時間経過でアクセストークンが変化する場合があるので、このURLは使い捨てで次回再接続するときは通常のURLから始める
                 location_url = null;
             } else {
-                const url = getReplaceUrl(registration.instanceUrl);
+                const url = getReplaceUrl(registration.instanceUrl,information.urls);
                 const endpoint = getEndpoint(registration.instanceUrl, information.version, registration.endpoint);
                 last_stream_url = `${url}/api/v1/streaming/?access_token=${registration.accessToken}&stream=${endpoint}`;
             }
+            
+            log('info',`streaming: ${last_stream_url}`)
 
             const ws = self.webSocket = new WebSocket(last_stream_url)
 
