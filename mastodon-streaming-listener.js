@@ -172,8 +172,8 @@ const compareVersionString = (src_a, src_b) => {
             return -1;
         }
 
-        var isNum_a = a.test(reDigits)
-        var isNum_b = b.test(reDigits)
+        var isNum_a = reDigits.test(a)
+        var isNum_b = reDigits.test(b)
 
         // 数字同士なら数値を比較
         if (isNum_a && isNum_b) {
