@@ -28,6 +28,8 @@ This is a server to provide relay the notification from Mastodon's Streaming API
 - access_token : The access token you get from Mastodon's oAuth API.
 - callback_url : The URL that will be called when new notification is arrived.
 - endpoint : (optional)Type of streaming endpoint. One of 'user', 'user:notification'
+
+
 (notice)
 Your app needs to call /register repeatly within 3 days to keep listening.
 
