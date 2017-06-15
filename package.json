@@ -1,6 +1,6 @@
 {
     "name": "mastodon-streaming-listener",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "relays notification from Mastodon's Streaming API to registered callback",
     "main": "mastodon-streaming-listener.js",
     "scripts": {

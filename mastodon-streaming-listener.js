@@ -352,11 +352,9 @@ const ListenerConnection = function (log, ws_key, registration) {
     let location_url
 
     const onMessage = data => {
+        if (self.isDisposed) return;
+        
         const json = JSON.parse(data)
-
-        if (self.isDisposed) {
-            return;
-        }
 
         if (json.event !== 'notification') {
             return
@@ -397,6 +395,8 @@ const ListenerConnection = function (log, ws_key, registration) {
     }
 
     const onUnexpectedResponse = (req, res) => {
+        if (self.isDisposed) return;
+        
         log('info', `onUnexpectedResponse. statusCode=${res.statusCode}. url=${last_stream_url}`);
 
         if ("401" == res.statusCode) {
@@ -414,12 +414,16 @@ const ListenerConnection = function (log, ws_key, registration) {
     }
 
     const onError = error => {
+        if (self.isDisposed) return;
+        
         log('error', `onError. date=${new Date().toLocaleString()}, url=${last_stream_url}, error=` + util.inspect(error));
 
         scheduleReconnect()
     }
 
     const onClose = code => {
+        if (self.isDisposed) return;
+        
         if (code === 1000) {
             log('info', 'onClose : Remote server closed connection')
             disconnectForUser(registration);
@@ -434,6 +438,8 @@ const ListenerConnection = function (log, ws_key, registration) {
 
         self.clearTimers()
 
+        if (self.isDisposed) return;
+
         // アクセストークンが変更されているかもしれないのでリロード
         Registration.findOne({
             where: {
@@ -443,10 +449,8 @@ const ListenerConnection = function (log, ws_key, registration) {
             }
         }).then((r) => {
 
-            if (self.isDisposed) {
-                // DBクエリしてる間にこの接続オブジェクトは破棄されていた
-                return
-            }
+            // DBクエリしてる間にこの接続オブジェクトは破棄されていた
+            if (self.isDisposed) return;
 
             if (!r) {
                 // いつのまにか登録が解除されていた
@@ -463,6 +467,8 @@ const ListenerConnection = function (log, ws_key, registration) {
             axios.get(
                 informationUrl
             ).then(response => {
+                if (self.isDisposed) return;
+
                 log('info', `instance information, status ${response.status}, version=${response.data.version}`);
                 reconnect_sub(response.data)
             }).catch(error => {
@@ -478,7 +484,7 @@ const ListenerConnection = function (log, ws_key, registration) {
     // reconnect 
     const reconnect_sub = (information) => {
         try {
-
+            
             // 接続先URLの決定
             if (location_url) {
                 // 301レスポンスで知らされたURLがあれば優先的に使う
