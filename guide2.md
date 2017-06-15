@@ -60,10 +60,11 @@ Streaming Listenerがあなたを識別できるように、特別なアプリID
 ### Streaming Listener へのHUP
 
 - 設定変更が終わったら Streaming Listener にHUPシグナルを送ります。
-- PS auxwf すると 関連プロセスが5行くらいあるんですが、一番深いプロセスのPID に向けて kill -HUP (pid) します。
+- PS auxwf すると 関連プロセスが4-5行くらいあるんですが、一番深いプロセスのPID に向けて kill -HUP (pid) します。
 
 ```
-root      5929  0.0  0.1 413060  5232 ?        Sl   12:32   0:00  |   \_ docker-containerd-shim a1161b21f0e9df419cf2ac95271a7125590c9e505457c95a4d5a1f5f6c58d074 /var/run/docker/libcontainerd/a1161b21f0e9df419cf2ac95271a71255901001      5947  0.0  1.1 1062748 46128 ?       Ssl  12:32   0:00  |        \_ npm
+root      5929  0.0  0.1 413060  5232 ?        Sl   12:32   0:00  |   \_ docker-containerd-shim a1161b21f0e9df419cf2ac95271a7125590c9e505457c95a4d5a1f5f6c58d074 /var/run/docker/libcontainerd/a1161b21f0e9df419cf2ac95271a7125590
+1001      5947  0.0  1.1 1062748 46128 ?       Ssl  12:32   0:00  |        \_ npm
 1001      6000  0.0  0.0   4340   708 ?        S    12:32   0:00  |           \_ sh -c babel-node ./mastodon-streaming-listener.js --presets es2015,stage-2
 1001      6001  0.0  0.6 907716 25368 ?        Sl   12:32   0:00  |               \_ node /app1/node_modules/.bin/babel-node ./mastodon-streaming-listener.js --presets es2015,stage-2
 1001      6012  0.5  1.7 1239400 69520 ?       Sl   12:32   0:11  |                   \_ /usr/local/bin/node /app1/node_modules/babel-cli/lib/_babel-node ./mastodon-streaming-listener.js --presets es2015,stage-2
@@ -73,7 +74,7 @@ root      5929  0.0  0.1 413060  5232 ?        Sl   12:32   0:00  |   \_
 ## 通知リスナ設定ファイルの作成
 
 - 以下のようなファイルを作成して、Webから見える場所に設置します。設置したらURLをメモしておいてください。(B)
-- urlStreamingListenerRegister と urlStreamingListenerUnregister にはあなたのStreaming Listener のAPI endpoint URL を記載します。
+- urlStreamingListenerRegister と urlStreamingListenerUnregister にはあなたのStreaming Listener のAPI endpoint URL を記載します。 事前にブラウザでURLにアクセスして、ホスト名のtypoや証明書まわりの問題がないことを確認しておいてください
 - appId にはアプリIDを記載します。
 ```
 {
