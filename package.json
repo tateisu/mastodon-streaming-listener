@@ -9,7 +9,7 @@
     "author": "tateisu <tateisu@gmail.com>",
     "license": "MIT",
     "dependencies": {
-        "axios": "^0.18.1",
+        "axios": "^0.21.1",
         "babel-cli": "^6.23.0",
         "babel-preset-env": "^1.5.1",
         "body-parser": "^1.17.1",
